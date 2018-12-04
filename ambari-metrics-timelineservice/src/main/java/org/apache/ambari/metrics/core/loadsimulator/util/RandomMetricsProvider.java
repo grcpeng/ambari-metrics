@@ -20,6 +20,7 @@ package org.apache.ambari.metrics.core.loadsimulator.util;
 import java.util.Random;
 
 /**
+ * 生成基于max和min生成一个随机的在这两者之间的值
  */
 public class RandomMetricsProvider {
 

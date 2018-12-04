@@ -18,12 +18,20 @@
 package org.apache.ambari.metrics.core.loadsimulator.util;
 
 /**
+ * 基于startTime, timeStep, sendInterval三个时间参数生成一个timestamps数组，
+ * 形成METRIC_RECORD表的METRICS字段的key
  */
 public class TimeStampProvider {
   private int timeStep;
   private long currentTime;
   private int sendInterval;
 
+	/**
+	 *
+	 * @param startTime new Date().getTime();
+	 * @param timeStep eg: 10000 collectIntervalMillis
+	 * @param sendInterval eg: 20000 sendIntervalMillis
+	 */
   public TimeStampProvider(long startTime, int timeStep, int sendInterval) {
     this.timeStep = timeStep;
     this.currentTime = startTime - timeStep;

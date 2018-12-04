@@ -19,11 +19,12 @@ package org.apache.ambari.metrics.core.loadsimulator.net;
 
 /**
  * MetricSender should provides a simple way of pushing metrics to some service.
+ * MetricSender应该提供一种向某些服务推送度量的简单方法。
  */
 public interface MetricsSender {
   /**
    * Push metrics to the metric service (e.g. a metrics storage system).
-   *
+   * 将metrics数据推送到metric service(例如metrics storage system)。
    * @param payload the payload to be sent to metrics service
    * @return response message either acknowledgement or error
    */

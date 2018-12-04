@@ -363,9 +363,18 @@ public class TimelineMetricConfiguration {
     this.isInitialized = true;
   }
 
+	/**
+	 * 	读取hbase-site.xml和ams-site.xml文件
+ 	 */
   public void initialize() throws URISyntaxException, MalformedURLException {
     if (!isInitialized) {
+    	// 返回这个线程的上下文类装入器。上下文类加载器由线程的创建者提供，供在加载类和资源时在此线程中运行的代码使用。
+	    // 如果没有设置，默认是父线程的ClassLoader上下文。原始线程的上下文类加载器通常设置为用于加载应用程序的类加载器。
+	    // 如果安全管理器存在,和调用者的类加载器不是零,并不等于或上下文类加载器的祖先,
+	    // 那么这个方法调用安全管理器的checkPermission方法RuntimePermission(“getClassLoader”)许可验证检索上下文类加载器是允许的。
       ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+      // 读取配置文件，优先使用Thread.currentThread().getContextClassLoader()。
+	    // 如果使用getClass.getClassLoader()，可能会导致和当前线程所运行的类加载器不一致（因为Java天生的多线程）。
       if (classLoader == null) {
         classLoader = getClass().getClassLoader();
       }
@@ -389,6 +398,7 @@ public class TimelineMetricConfiguration {
       metricsConf = new Configuration(true);
       metricsConf.addResource(amsResUrl.toURI().toURL());
 
+      // https的话就需要验证ssl
       if (metricsConf.get("timeline.metrics.service.http.policy", "HTTP_ONLY").equalsIgnoreCase("HTTPS_ONLY")) {
         URL amsSllResUrl = classLoader.getResource(METRICS_SSL_SERVER_CONFIGURATION_FILE);
         LOG.info("Found metric ssl service configuration: " + amsResUrl);

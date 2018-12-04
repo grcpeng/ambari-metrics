@@ -20,16 +20,23 @@ package org.apache.ambari.metrics.core.loadsimulator.data;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * phoenix表对应的结构，可以插入和获取对应的字段值
+ */
 public class Metric {
 
   private String instanceid;
   private String hostname;
-  private Map<String, String> metrics = new LinkedHashMap<String, String>();
+	/**
+	 * timestamp作为key
+	 */
+	private Map<String, String> metrics = new LinkedHashMap<String, String>();
   private String starttime;
   private String appid;
   private String metricname;
 
   // i don't like this ctor, but it has to be public for json deserialization
+	// 我不喜欢这个ctor，但是为了json反序列化，它必须是公共的
   public Metric() {
   }
 

@@ -103,6 +103,12 @@ public class LoadRunner {
     }
   }
 
+	/**
+	 * 返回以ApplicationInstance为主键的多行METRIC_RECORD记录
+	 * @param simHost
+	 * @param host
+	 * @return
+	 */
   private HostMetricsGenerator createApplicationMetrics(String simHost, AppID host) {
     ApplicationInstance appInstance = new ApplicationInstance(simHost, host, "");
     TimeStampProvider timeStampProvider = new TimeStampProvider(startTime,

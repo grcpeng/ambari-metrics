@@ -115,7 +115,7 @@ limitations under the License.
           </execution>
         </executions>
         <configuration>
-          <skip>true</skip>
+          <!--<skip>true</skip>-->
           <attach>false</attach>
           <submodules>false</submodules>
           <controlDir>${project.basedir}/../src/main/package/deb/control</controlDir>

@@ -42,7 +42,7 @@ public class MetricsGeneratorConfigurer {
 
   /**
    * Creates HostMetricsGenerator configured with metric names loaded from file.
-   *
+   * 创建配置了从文件加载的metric名称的HostMetricsGenerator。
    * @param id         ApplicationInstance descriptor, will be used to create
    *                   HostMetricsGenerator, cannot be null
    * @param timeStamps configured TimeStampProvider that can provide next
@@ -57,6 +57,7 @@ public class MetricsGeneratorConfigurer {
     return new HostMetricsGenerator(id, timeStamps, readMetrics(id.getAppId()));
   }
 
+  // 返回一个app_id对应的所有metric_name为key，100到200之间随机数的RandomMetricsProvider对象为value的Map
   private static Map<String, RandomMetricsProvider> readMetrics(AppID type) {
     InputStream input = null;
     Map<String, RandomMetricsProvider> metrics =
@@ -66,6 +67,7 @@ public class MetricsGeneratorConfigurer {
     try {
       LOG.info("Loading " + fileName);
 
+      // 加载#{AppId}.dat文件内容
       input = MetricsGeneratorConfigurer.class.getClassLoader()
         .getResourceAsStream(fileName);
 

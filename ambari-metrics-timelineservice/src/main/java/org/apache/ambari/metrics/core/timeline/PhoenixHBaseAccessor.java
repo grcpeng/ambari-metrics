@@ -17,6 +17,31 @@
  */
 package org.apache.ambari.metrics.core.timeline;
 
+import com.google.common.collect.Multimap;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.ambari.metrics.core.timeline.FunctionUtils.findMetricFunctions;
 import static org.apache.ambari.metrics.core.timeline.TimelineMetricConfiguration.AGGREGATORS_SKIP_BLOCK_CACHE;
@@ -37,27 +62,39 @@ import static org.apache.ambari.metrics.core.timeline.TimelineMetricConfiguratio
 import static org.apache.ambari.metrics.core.timeline.TimelineMetricConfiguration.HBASE_COMPRESSION_SCHEME;
 import static org.apache.ambari.metrics.core.timeline.TimelineMetricConfiguration.HBASE_ENCODING_SCHEME;
 import static org.apache.ambari.metrics.core.timeline.TimelineMetricConfiguration.HOST_AGGREGATOR_MINUTE_SLEEP_INTERVAL;
-import static org.apache.ambari.metrics.core.timeline.TimelineMetricConfiguration.HSTORE_COMPACTION_CLASS_KEY;
-import static org.apache.ambari.metrics.core.timeline.TimelineMetricConfiguration.HSTORE_ENGINE_CLASS;
-import static org.apache.ambari.metrics.core.timeline.TimelineMetricConfiguration.TIMELINE_METRICS_EVENT_METRIC_PATTERNS;
-import static org.apache.ambari.metrics.core.timeline.TimelineMetricConfiguration.TIMELINE_METRICS_SUPPORT_MULTIPLE_CLUSTERS;
-import static org.apache.ambari.metrics.core.timeline.TimelineMetricConfiguration.TRANSIENT_METRIC_PATTERNS;
 import static org.apache.ambari.metrics.core.timeline.TimelineMetricConfiguration.HOST_DAILY_TABLE_TTL;
 import static org.apache.ambari.metrics.core.timeline.TimelineMetricConfiguration.HOST_HOUR_TABLE_TTL;
 import static org.apache.ambari.metrics.core.timeline.TimelineMetricConfiguration.HOST_MINUTE_TABLE_TTL;
+import static org.apache.ambari.metrics.core.timeline.TimelineMetricConfiguration.HSTORE_COMPACTION_CLASS_KEY;
+import static org.apache.ambari.metrics.core.timeline.TimelineMetricConfiguration.HSTORE_ENGINE_CLASS;
 import static org.apache.ambari.metrics.core.timeline.TimelineMetricConfiguration.METRICS_TRANSIENT_TABLE_TTL;
 import static org.apache.ambari.metrics.core.timeline.TimelineMetricConfiguration.PRECISION_TABLE_TTL;
 import static org.apache.ambari.metrics.core.timeline.TimelineMetricConfiguration.TIMELINE_METRICS_CACHE_COMMIT_INTERVAL;
 import static org.apache.ambari.metrics.core.timeline.TimelineMetricConfiguration.TIMELINE_METRICS_CACHE_ENABLED;
 import static org.apache.ambari.metrics.core.timeline.TimelineMetricConfiguration.TIMELINE_METRICS_CACHE_SIZE;
+import static org.apache.ambari.metrics.core.timeline.TimelineMetricConfiguration.TIMELINE_METRICS_EVENT_METRIC_PATTERNS;
+import static org.apache.ambari.metrics.core.timeline.TimelineMetricConfiguration.TIMELINE_METRICS_SUPPORT_MULTIPLE_CLUSTERS;
 import static org.apache.ambari.metrics.core.timeline.TimelineMetricConfiguration.TIMELINE_METRIC_AGGREGATOR_SINK_CLASS;
+import static org.apache.ambari.metrics.core.timeline.TimelineMetricConfiguration.TRANSIENT_METRIC_PATTERNS;
+import org.apache.ambari.metrics.core.timeline.aggregators.AggregatorUtils;
+import org.apache.ambari.metrics.core.timeline.aggregators.Function;
+import org.apache.ambari.metrics.core.timeline.aggregators.TimelineClusterMetric;
+import org.apache.ambari.metrics.core.timeline.aggregators.TimelineMetricReadHelper;
+import org.apache.ambari.metrics.core.timeline.discovery.TimelineMetricHostMetadata;
+import org.apache.ambari.metrics.core.timeline.discovery.TimelineMetricMetadataKey;
+import org.apache.ambari.metrics.core.timeline.discovery.TimelineMetricMetadataManager;
+import org.apache.ambari.metrics.core.timeline.query.Condition;
+import org.apache.ambari.metrics.core.timeline.query.DefaultPhoenixDataSource;
+import org.apache.ambari.metrics.core.timeline.query.MetadataQueryCondition;
+import org.apache.ambari.metrics.core.timeline.query.PhoenixConnectionProvider;
+import org.apache.ambari.metrics.core.timeline.query.PhoenixTransactSQL;
 import static org.apache.ambari.metrics.core.timeline.query.PhoenixTransactSQL.CONTAINER_METRICS_TABLE_NAME;
 import static org.apache.ambari.metrics.core.timeline.query.PhoenixTransactSQL.CREATE_CONTAINER_METRICS_TABLE_SQL;
-import static org.apache.ambari.metrics.core.timeline.query.PhoenixTransactSQL.CREATE_TRANSIENT_METRICS_TABLE_SQL;
 import static org.apache.ambari.metrics.core.timeline.query.PhoenixTransactSQL.CREATE_METRICS_AGGREGATE_TABLE_SQL;
 import static org.apache.ambari.metrics.core.timeline.query.PhoenixTransactSQL.CREATE_METRICS_CLUSTER_AGGREGATE_GROUPED_TABLE_SQL;
 import static org.apache.ambari.metrics.core.timeline.query.PhoenixTransactSQL.CREATE_METRICS_CLUSTER_AGGREGATE_TABLE_SQL;
 import static org.apache.ambari.metrics.core.timeline.query.PhoenixTransactSQL.CREATE_METRICS_TABLE_SQL;
+import static org.apache.ambari.metrics.core.timeline.query.PhoenixTransactSQL.CREATE_TRANSIENT_METRICS_TABLE_SQL;
 import static org.apache.ambari.metrics.core.timeline.query.PhoenixTransactSQL.DEFAULT_ENCODING;
 import static org.apache.ambari.metrics.core.timeline.query.PhoenixTransactSQL.DEFAULT_TABLE_COMPRESSION;
 import static org.apache.ambari.metrics.core.timeline.query.PhoenixTransactSQL.GET_HOSTED_APPS_METADATA_SQL;
@@ -84,51 +121,12 @@ import static org.apache.ambari.metrics.core.timeline.query.PhoenixTransactSQL.U
 import static org.apache.ambari.metrics.core.timeline.query.PhoenixTransactSQL.UPSERT_METADATA_SQL;
 import static org.apache.ambari.metrics.core.timeline.query.PhoenixTransactSQL.UPSERT_METRICS_SQL;
 import static org.apache.ambari.metrics.core.timeline.query.PhoenixTransactSQL.UPSERT_TRANSIENT_METRICS_SQL;
-import static org.apache.ambari.metrics.core.timeline.source.InternalSourceProvider.SOURCE_NAME.RAW_METRICS;
-import static org.apache.hadoop.metrics2.sink.timeline.TimelineMetricUtils.getJavaMetricPatterns;
-
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
-import org.apache.ambari.metrics.core.timeline.aggregators.AggregatorUtils;
-import org.apache.ambari.metrics.core.timeline.aggregators.Function;
-import org.apache.ambari.metrics.core.timeline.aggregators.TimelineClusterMetric;
-import org.apache.ambari.metrics.core.timeline.aggregators.TimelineMetricReadHelper;
-import org.apache.ambari.metrics.core.timeline.discovery.TimelineMetricHostMetadata;
-import org.apache.ambari.metrics.core.timeline.discovery.TimelineMetricMetadataKey;
-import org.apache.ambari.metrics.core.timeline.discovery.TimelineMetricMetadataManager;
-import org.apache.ambari.metrics.core.timeline.query.Condition;
-import org.apache.ambari.metrics.core.timeline.query.DefaultPhoenixDataSource;
-import org.apache.ambari.metrics.core.timeline.query.MetadataQueryCondition;
-import org.apache.ambari.metrics.core.timeline.query.PhoenixConnectionProvider;
-import org.apache.ambari.metrics.core.timeline.query.PhoenixTransactSQL;
 import org.apache.ambari.metrics.core.timeline.query.SplitByMetricNamesCondition;
 import org.apache.ambari.metrics.core.timeline.sink.ExternalMetricsSink;
 import org.apache.ambari.metrics.core.timeline.sink.ExternalSinkProvider;
 import org.apache.ambari.metrics.core.timeline.source.InternalMetricsSource;
 import org.apache.ambari.metrics.core.timeline.source.InternalSourceProvider;
+import static org.apache.ambari.metrics.core.timeline.source.InternalSourceProvider.SOURCE_NAME.RAW_METRICS;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
@@ -152,6 +150,7 @@ import org.apache.hadoop.metrics2.sink.timeline.Precision;
 import org.apache.hadoop.metrics2.sink.timeline.SingleValuedTimelineMetric;
 import org.apache.hadoop.metrics2.sink.timeline.TimelineMetric;
 import org.apache.hadoop.metrics2.sink.timeline.TimelineMetricMetadata;
+import static org.apache.hadoop.metrics2.sink.timeline.TimelineMetricUtils.getJavaMetricPatterns;
 import org.apache.hadoop.metrics2.sink.timeline.TimelineMetrics;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.yarn.api.records.ContainerId;
@@ -160,11 +159,10 @@ import org.apache.phoenix.exception.PhoenixIOException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 
-import com.google.common.collect.Multimap;
-
 
 /**
  * Provides a facade over the Phoenix API to access HBase schema
+ * 为Phoenix API访问HBase schema提供一个外观(facade)
  */
 public class PhoenixHBaseAccessor {
   private static final Log LOG = LogFactory.getLog(PhoenixHBaseAccessor.class);
@@ -177,6 +175,7 @@ public class PhoenixHBaseAccessor {
    * 22 cluster aggregate metrics for 2 hours (30 second data records)
    * 22 * (2 * 60 * 2) = 5280
    * => Reasonable upper bound on the limit such that our Precision calculation for a given time range makes sense.
+   * 合理的上限，以使我们的精度计算在一个给定的时间范围有意义。
    */
   public static int RESULTSET_LIMIT = 5760;
 
@@ -318,6 +317,10 @@ public class PhoenixHBaseAccessor {
     commitMetrics(Collections.singletonList(timelineMetrics));
   }
 
+	/**
+	 * metrics存储到hbase
+	 * @param timelineMetricsCollection
+	 */
   public void commitMetrics(Collection<TimelineMetrics> timelineMetricsCollection) {
     LOG.debug("Committing metrics to store");
     Connection conn = null;
@@ -510,7 +513,10 @@ public class PhoenixHBaseAccessor {
     return dataSource.getHBaseAdmin();
   }
 
-  protected void initMetricSchema() {
+	/**
+	 * 初始化metrics表
+	 */
+	protected void initMetricSchema() {
     Connection conn = null;
     Statement stmt = null;
     PreparedStatement pStmt = null;
@@ -527,11 +533,11 @@ public class PhoenixHBaseAccessor {
       conn = getConnectionRetryingOnException();
       stmt = conn.createStatement();
 
-      // Container Metrics
+      // 建Container Metrics表
       stmt.executeUpdate( String.format(CREATE_CONTAINER_METRICS_TABLE_SQL,
         encoding, tableTTL.get(CONTAINER_METRICS_TABLE_NAME), compression));
 
-      // Host level
+      // 建表METRIC_RECORD_UUID （即ambari2.6.2版本的METRIC_RECORD表）Host level
       String precisionSql = String.format(CREATE_METRICS_TABLE_SQL,
         encoding, tableTTL.get(METRICS_RECORD_TABLE_NAME), compression);
       pStmt = prepareCreateMetricsTableStatement(conn, precisionSql, splitPointComputer.getPrecisionSplitPoints());
@@ -805,6 +811,7 @@ public class PhoenixHBaseAccessor {
     return statement;
   }
 
+  //将uuid字节数组转化成字符串
   private String getSplitPointsStr(int numSplits) {
     if (numSplits <= 0) {
       return "";
@@ -1058,6 +1065,7 @@ public class PhoenixHBaseAccessor {
   }
 
   /**
+   * 如果用提供的else获取精度或应用默认方法聚合数据，则对结果应用聚合函数。
    * Apply aggregate function to the result if supplied else get precision
    * or aggregate data with default function applied.
    */

@@ -31,7 +31,11 @@ import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.codehaus.jackson.map.annotate.JsonDeserialize;
 
+/**
+ * METRIC_RECORD表结构映射
+ */
 @XmlRootElement(name = "metric")
+// 没有任何字段或属性被绑定到XML，除非它们被一些JAXB注释特别注释。
 @XmlAccessorType(XmlAccessType.NONE)
 @InterfaceAudience.Public
 @InterfaceStability.Unstable
@@ -155,8 +159,10 @@ public class TimelineMetric implements Comparable<TimelineMetric>, Serializable 
   }
 
   public void addMetricValues(Map<Long, Double> metricValues) {
+  	// 将所有映射从指定映射复制到此映射。这些映射替换了这个映射对于当前指定映射中的任何键的任何映射。
     this.metricValues.putAll(metricValues);
     if (!this.metricValues.isEmpty()) {
+	    // 返回此映射中当前的第一个(最低的)键。
       this.setStartTime(this.metricValues.firstKey());
     }
   }
@@ -189,6 +195,11 @@ public class TimelineMetric implements Comparable<TimelineMetric>, Serializable 
     return true;
   }
 
+	/**
+	 * 如果metricName、hostName、appId、instanceId都相等的话则判定TimelineMetric相等
+	 * @param metric
+	 * @return
+	 */
   public boolean equalsExceptTime(TimelineMetric metric) {
     if (!metricName.equals(metric.metricName)) return false;
     if (hostName != null ? !hostName.equals(metric.hostName) : metric.hostName != null)

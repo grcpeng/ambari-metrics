@@ -22,7 +22,7 @@ import org.apache.ambari.metrics.core.timeline.availability.AggregationTaskRunne
 public interface TimelineMetricAggregator extends Runnable {
   /**
    * Aggregate metric data within the time bounds.
-   *
+   * 在时间范围内聚合度量数据。
    * @param startTime start time millis
    * @param endTime   end time millis
    * @return success
@@ -31,26 +31,27 @@ public interface TimelineMetricAggregator extends Runnable {
 
   /**
    * Is aggregator is disabled by configuration.
-   *
+   * 通过配置禁用聚合器。
    * @return true/false
    */
   boolean isDisabled();
 
   /**
    * Return aggregator Interval
-   *
+   * 返回聚合器间隔
    * @return Interval in Millis
    */
   Long getSleepIntervalMillis();
 
   /**
-   * Get aggregator name
+   * Get aggregator name 获取聚合器名字
    * @return @AGGREGATOR_NAME
    */
   AGGREGATOR_NAME getName();
 
   /**
    * Known aggregator types
+   * 聚合器类型
    */
   enum AGGREGATOR_TYPE {
     CLUSTER,

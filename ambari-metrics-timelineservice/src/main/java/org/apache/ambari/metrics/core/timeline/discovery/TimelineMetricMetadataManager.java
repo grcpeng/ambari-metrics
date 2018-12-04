@@ -470,6 +470,7 @@ public class TimelineMetricMetadataManager {
   }
 
   /**
+   * 给定一个timelineClusterMetric实例，为metric-app-instance这样的组合生成UUID。
    * Given a timelineClusterMetric instance, generates a UUID for Metric-App-Instance combination.
    * @param timelineClusterMetric The timeline cluster metric for which the UUID needs to be generated.
    * @param createIfNotPresent Generate UUID if not present.

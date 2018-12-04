@@ -85,6 +85,7 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.0</version>
       </plugin>
+<!--
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
@@ -110,6 +111,7 @@
           </execution>
         </executions>
       </plugin>
+-->
       <plugin>
         <groupId>org.apache.rat</groupId>
         <artifactId>apache-rat-plugin</artifactId>
@@ -174,6 +176,7 @@
         <assemblydescriptor>src/main/assemblies/empty.xml</assemblydescriptor>
         <packagingFormat>jar</packagingFormat>
       </properties>
+<!--
       <build>
         <plugins>
           <plugin>
@@ -192,7 +195,7 @@
                     <exec dir="${basedir}/src/main/python/psutil" executable="${executable.python}" failonerror="true">
                       <arg value="setup.py" />
                       <arg value="build" />
-                      <arg value="--build-platlib" />
+                      <arg value="&#45;&#45;build-platlib" />
                       <arg value="${basedir}/target/psutil_build" />
                     </exec>
                   </target>
@@ -202,6 +205,7 @@
           </plugin>
         </plugins>
       </build>
+-->
     </profile>
   </profiles>
 </project>

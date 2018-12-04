@@ -202,10 +202,10 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>2.19</version>
         <configuration>
-          <skip>${skipSurefireTests}</skip>
+          <!--<skip>${skipSurefireTests}</skip>-->
 
           <!-- Each profile in the top-level pom.xml defines which test group categories to run. -->
-          <groups>${testcase.groups}</groups>
+          <!--<groups>${testcase.groups}</groups>-->
         </configuration>
       </plugin>
       <plugin>
@@ -251,8 +251,8 @@
           <copyright>2012, Apache Software Foundation</copyright>
           <group>Development</group>
           <description>Maven Recipe: RPM Package.</description>
-          <release>${package-release}</release>
-          <version>${package-version}</version>
+          <!--<release>${package-release}</release>-->
+          <!--<version>${package-version}</version>-->
           <mappings/>
         </configuration>
       </plugin>
@@ -271,7 +271,7 @@
           </execution>
         </executions>
         <configuration>
-          <skip>true</skip>
+          <!--<skip>true</skip>-->
           <attach>false</attach>
           <submodules>true</submodules>
           <controlDir>${project.basedir}/src/main/package/deb/control</controlDir>
@@ -324,6 +324,7 @@
           <value>true</value>
         </property>
       </activation>
+<!--
       <build>
         <plugins>
           <plugin>
@@ -342,6 +343,7 @@
           </plugin>
         </plugins>
       </build>
+-->
     </profile>
   </profiles>
 </project>

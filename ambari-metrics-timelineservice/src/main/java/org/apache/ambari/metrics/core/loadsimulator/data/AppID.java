@@ -17,6 +17,9 @@
  */
 package org.apache.ambari.metrics.core.loadsimulator.data;
 
+/**
+ * 对应Phoenix表的APP_ID
+ */
 public enum AppID {
   HOST("HOST"),
   NAMENODE("namenode"),

@@ -35,6 +35,7 @@ import org.apache.ambari.metrics.core.timeline.PhoenixHBaseAccessor;
 import static org.apache.ambari.metrics.core.timeline.PhoenixHBaseAccessor.RESULTSET_LIMIT;
 
 /**
+ * 封装所有与SQL查询相关的指标。
  * Encapsulate all metrics related SQL queries.
  */
 public class PhoenixTransactSQL {

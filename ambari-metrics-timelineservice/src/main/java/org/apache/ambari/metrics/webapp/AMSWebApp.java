@@ -31,7 +31,10 @@ public class AMSWebApp extends WebApp implements YarnWebParams {
     this.timelineMetricStore = timelineMetricStore;
   }
 
-  @Override
+	/**
+	 * 启动WebApp时调用guice的方法，执行依赖注入操作
+	 */
+	@Override
   public void setup() {
     bind(YarnJacksonJaxbJsonProvider.class);
     bind(TimelineWebServices.class);

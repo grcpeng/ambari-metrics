@@ -48,7 +48,7 @@
           </execution>
         </executions>
         <configuration>
-          <skip>true</skip>
+          <!--<skip>true</skip>-->
           <attach>false</attach>
           <submodules>false</submodules>
           <controlDir>${project.basedir}/../src/main/package/deb/control</controlDir>
@@ -101,6 +101,7 @@
         </executions>
       </plugin>
 
+<!--
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-antrun-plugin</artifactId>
@@ -129,6 +130,7 @@
           </execution>
         </executions>
       </plugin>
+-->
     </plugins>
 
   </build>

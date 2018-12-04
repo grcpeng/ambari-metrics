@@ -25,6 +25,7 @@ import org.apache.ambari.metrics.core.loadsimulator.util.RandomMetricsProvider;
 import org.apache.ambari.metrics.core.loadsimulator.util.TimeStampProvider;
 
 /**
+ * 生成APP_ID为HOST的Metrics记录
  */
 public class HostMetricsGenerator {
 
@@ -40,7 +41,11 @@ public class HostMetricsGenerator {
     this.metricDataProviders = metricDataProviders;
   }
 
-  public AppMetrics createMetrics() {
+	/**
+	 * 返回Metrics记录，对应METRIC_RECORD表的AppId和METRIC_NAME为key的多行记录
+	 * @return
+	 */
+	public AppMetrics createMetrics() {
     long[] timestamps = tsp.timestampsForNextInterval();
     AppMetrics appMetrics = new AppMetrics(id, timestamps[0]);
 
@@ -49,9 +54,11 @@ public class HostMetricsGenerator {
       RandomMetricsProvider metricData = entry.getValue();
 
       Metric metric = appMetrics.createMetric(metricName);
+      // 形成METRIC_RECORD表METRICS字段
       for (long timestamp : timestamps) {
         metric.putMetric(timestamp, String.valueOf(metricData.next()));
       }
+      // 将METRIC_RECORD一行记录即metric添加到Collection<Metric>中
       appMetrics.addMetric(metric);
     }
 

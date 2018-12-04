@@ -242,16 +242,16 @@
           </mappings>
         </configuration>
       </plugin>
-      <plugin>
+      <!--<plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <redirectTestOutputToFile>true</redirectTestOutputToFile>
           <forkMode>always</forkMode>
           <argLine>-XX:-UseSplitVerifier</argLine>
-          <!-- Each profile in the top-level pom.xml defines which test group categories to run. -->
+          &lt;!&ndash; Each profile in the top-level pom.xml defines which test group categories to run. &ndash;&gt;
           <groups>${testcase.groups}</groups>
         </configuration>
-      </plugin>
+      </plugin>-->
       <plugin>
         <groupId>org.apache.rat</groupId>
         <artifactId>apache-rat-plugin</artifactId>
@@ -270,13 +270,14 @@
           </execution>
         </executions>
       </plugin>
+<!--
       <plugin>
         <groupId>org.vafer</groupId>
         <artifactId>jdeb</artifactId>
         <version>1.0.1</version>
         <executions>
           <execution>
-            <!--Stub execution on direct plugin call - workaround for ambari deb build process-->
+            &lt;!&ndash;Stub execution on direct plugin call - workaround for ambari deb build process&ndash;&gt;
             <id>stub-execution</id>
             <phase>none</phase>
             <goals>
@@ -292,6 +293,7 @@
           </controlDir>
         </configuration>
       </plugin>
+-->
     </plugins>
   </build>
 

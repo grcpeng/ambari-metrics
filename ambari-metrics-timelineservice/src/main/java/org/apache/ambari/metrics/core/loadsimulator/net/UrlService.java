@@ -24,6 +24,9 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+/**
+ * 创建连接，发送数据，关闭连接
+ */
 public class UrlService {
 
   public static final int CONNECT_TIMEOUT = 20000;
@@ -37,7 +40,7 @@ public class UrlService {
 
   /**
    * Returns a new UrlService connected to specified address.
-   *
+   * 返回连接到指定地址的新UrlService。
    * @param address
    * @return
    * @throws IOException
@@ -49,6 +52,7 @@ public class UrlService {
     return svc;
   }
 
+  // 创建url连接
   public HttpURLConnection connect() throws IOException {
     URL url = new URL(address);
     conn = (HttpURLConnection) url.openConnection();
@@ -68,8 +72,9 @@ public class UrlService {
   public String send(String payload) throws IOException {
     if (conn == null)
       throw new IllegalStateException("Cannot use unconnected UrlService");
+    // 往conn缓冲区写入数据
     write(payload);
-
+    // 从conn缓冲区读取数据并返回
     return read();
   }
 

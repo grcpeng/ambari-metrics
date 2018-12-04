@@ -228,6 +228,26 @@ public class HBaseTimelineMetricsService extends AbstractService implements Time
     super.serviceStop();
   }
 
+	/**
+	 * phoenix查询指标
+	 * @param metricNames Names of the metric, e.g.: cpu_user
+	 * @param hostnames Names of the host where the metric originated from
+	 * @param applicationId Id of the application to which this metric belongs
+	 * @param instanceId Application instance id.
+	 * @param startTime Start timestamp
+	 * @param endTime End timestamp
+	 * @param precision Precision [ seconds, minutes, hours ]
+	 * @param limit Override default result limit
+	 * @param groupedByHosts Group {@link TimelineMetric} by metric name, hostname,
+	 *                app id and instance id
+	 * @param topNConfig
+	 * @param seriesAggregateFunction Specify this when caller want to aggregate multiple metrics
+	 *                                series into one. [ SUM, AVG, MIN, MAX ]
+	 *
+	 * @return
+	 * @throws SQLException
+	 * @throws IOException
+	 */
   @Override
   public TimelineMetrics getTimelineMetrics(List<String> metricNames,
                                             List<String> hostnames, String applicationId, String instanceId,
@@ -288,7 +308,10 @@ public class HBaseTimelineMetricsService extends AbstractService implements Time
 
     Condition condition = conditionBuilder.build();
 
-    if (CollectionUtils.isEmpty(hostnames)) {
+	  /**
+	   * 如果hostname为空，则获取聚合数据，否则获取节点的数据
+	   */
+	  if (CollectionUtils.isEmpty(hostnames)) {
       metrics = hBaseAccessor.getAggregateMetricRecords(condition, metricFunctions);
     } else {
       metrics = hBaseAccessor.getMetricRecords(condition, metricFunctions);
@@ -408,6 +431,13 @@ public class HBaseTimelineMetricsService extends AbstractService implements Time
     return response;
   }
 
+	/**
+	 * 存储metrics
+	 * @param metrics An {@link TimelineMetrics}.
+	 * @return
+	 * @throws SQLException
+	 * @throws IOException
+	 */
   @Override
   public TimelinePutResponse putMetrics(TimelineMetrics metrics) throws SQLException, IOException {
     // Error indicated by the Sql exception
@@ -549,6 +579,10 @@ public class HBaseTimelineMetricsService extends AbstractService implements Time
     return new TimelineMetricServiceSummary(metricMetadataManager, haController);
   }
 
+	/**
+	 * 开启线程定时取聚合数据
+	 * @param aggregator
+	 */
   private void scheduleAggregatorThread(final TimelineMetricAggregator aggregator) {
     if (!aggregator.isDisabled()) {
       ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor(

@@ -21,6 +21,7 @@ package org.apache.ambari.metrics.core.loadsimulator.data;
  * AppId is a helper class that encapsulates the common part of metrics message.
  * It contains hostName, appId and instanceId. It is immutable,
  * and it can not hold null values.
+ * AppId是一个助手类，封装了度量信息的公共部分。它包含主机名、appId和instanceId。它是不可变的，并且不能持有空值。
  */
 public final class ApplicationInstance {
 
