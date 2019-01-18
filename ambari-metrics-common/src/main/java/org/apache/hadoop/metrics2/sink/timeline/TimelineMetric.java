@@ -196,7 +196,7 @@ public class TimelineMetric implements Comparable<TimelineMetric>, Serializable 
   }
 
 	/**
-	 * 如果metricName、hostName、appId、instanceId都相等的话则判定TimelineMetric相等
+	 * 如果metricName、hostName、appId、instanceId都相等的话则判定为true
 	 * @param metric
 	 * @return
 	 */

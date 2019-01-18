@@ -70,6 +70,7 @@ public abstract class AbstractTimelineAggregator implements TimelineMetricAggreg
   protected List<CustomDownSampler> configuredDownSamplers;
 
   // Explicitly name aggregators for logging needs
+  // 显式地为日志记录需要的聚合器命名
   private final AGGREGATOR_NAME aggregatorName;
 
   AbstractTimelineAggregator(AGGREGATOR_NAME aggregatorName,
@@ -81,6 +82,7 @@ public abstract class AbstractTimelineAggregator implements TimelineMetricAggreg
     this.checkpointDelayMillis = SECONDS.toMillis(metricsConf.getInt(AGGREGATOR_CHECKPOINT_DELAY, 120));
     this.resultsetFetchSize = metricsConf.getInt(RESULTSET_FETCH_SIZE, 2000);
     this.LOG = LoggerFactory.getLogger(ACTUAL_AGGREGATOR_NAMES.get(aggregatorName));
+    // TODO 看不懂什么意思？
     this.configuredDownSamplers = DownSamplerUtils.getDownSamplers(metricsConf);
     this.downsampleMetricPatterns = DownSamplerUtils.getDownsampleMetricPatterns(metricsConf);
   }
@@ -130,6 +132,7 @@ public abstract class AbstractTimelineAggregator implements TimelineMetricAggreg
       }
     }
 
+    // 判断taskRunner的类型(HOST,CLUSTER)的状态是否为真，如果为真才执行
     if (performAggregationFunction) {
       long currentTime = System.currentTimeMillis();
       long lastCheckPointTime = readLastCheckpointSavingOnFirstRun(currentTime);
@@ -457,6 +460,7 @@ public abstract class AbstractTimelineAggregator implements TimelineMetricAggreg
   /**
    * Get @AGGREGATOR_TYPE based on the output table.
    * This is solely used by the HAController to determine which lock to acquire.
+   * 这仅仅是由HAController来决定要获取哪个锁。
    */
   public AGGREGATOR_TYPE getAggregatorType() {
     if (outputTableName.contains("RECORD")) {

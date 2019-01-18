@@ -114,6 +114,7 @@ public class HBaseTimelineMetricsService extends AbstractService implements Time
 
       // Initialize metadata
       try {
+        //增加过滤器，排除指定的元数据
         metricMetadataManager = new TimelineMetricMetadataManager(hBaseAccessor);
       } catch (MalformedURLException | URISyntaxException e) {
         throw new ExceptionInInitializerError("Unable to initialize metadata manager");

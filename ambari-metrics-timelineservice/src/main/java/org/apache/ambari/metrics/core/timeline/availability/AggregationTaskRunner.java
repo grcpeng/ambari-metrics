@@ -71,7 +71,7 @@ public class AggregationTaskRunner {
     ACTUAL_AGGREGATOR_NAMES.put(METRIC_AGGREGATE_HOURLY, "TimelineClusterAggregatorHourly");
     ACTUAL_AGGREGATOR_NAMES.put(METRIC_AGGREGATE_DAILY, "TimelineClusterAggregatorDaily");
 
-    // Partition name to task assignment
+    // Partition name to task assignment 任务分配的分区名
     PARTITION_AGGREGATION_TYPES.put(MetricCollectorHAController.METRIC_AGGREGATORS + "_0", TimelineMetricAggregator.AGGREGATOR_TYPE.CLUSTER);
     PARTITION_AGGREGATION_TYPES.put(MetricCollectorHAController.METRIC_AGGREGATORS + "_1", TimelineMetricAggregator.AGGREGATOR_TYPE.HOST);
   }

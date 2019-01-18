@@ -108,6 +108,7 @@ public class MetricCollectorHAController {
       throw new MetricsSystemInitializationException(e.getMessage());
     }
 
+    // 首先，我们将向集群中添加新节点，然后配置集群中的节点。集群中的每个节点必须是唯一可识别的。
     instanceConfig = new InstanceConfig(instanceHostname + INSTANCE_NAME_DELIMITER + instancePort);
     instanceConfig.setHostName(instanceHostname);
     instanceConfig.setPort(instancePort);
@@ -171,6 +172,10 @@ public class MetricCollectorHAController {
     // Add a state model
     if (admin.getStateModelDef(clusterName, DEFAULT_STATE_MODEL) == null) {
       LOG.info("Adding ONLINE-OFFLINE state model to the cluster");
+      // 为了可伸缩性和容错性，每个分区可以有一个或多个副本。
+      // 状态模型允许通过首先枚举各种状态以及它们之间的转换来声明系统行为。
+      // 一个简单的模型是ONLINE-OFFLINE的，联机表示任务是活动的，脱机表示任务不是活动的。
+      // 您还可以指定每个状态中必须有多少个副本，这些称为约束。例如，在搜索系统中，可能需要服务于相同索引的多个节点来处理负载。
       admin.addStateModelDef(clusterName, DEFAULT_STATE_MODEL, new StateModelDefinition(
         StateModelConfigGenerator.generateConfigForOnlineOffline()));
     }
@@ -179,13 +184,16 @@ public class MetricCollectorHAController {
     // Since our aggregators are unbalanced in terms of work distribution we
     // only need to distribute writes to METRIC_AGGREGATE and
     // METRIC_RECORD_MINUTE
+    // 添加带有1个集群范围副本的资源，因为我们的聚合器在工作分配方面是不平衡的，所以我们只需要将写分配给METRIC_AGGREGATE和METRIC_RECORD_MINUTE
     List<String> resources = admin.getResourcesInCluster(clusterName);
     if (!resources.contains(METRIC_AGGREGATORS)) {
       LOG.info("Adding resource " + METRIC_AGGREGATORS + " with 2 partitions and 1 replicas");
+      // 对资源名称为METRIC_AGGREGATORS的资源分为2个区，分区算法为FULL_AUTO
       admin.addResource(clusterName, METRIC_AGGREGATORS, 2, DEFAULT_STATE_MODEL, FULL_AUTO.toString());
     }
     // this will set up the ideal state, it calculates the preference list for
     // each partition similar to consistent hashing
+    // 这将设置理想状态，它计算每个分区的首选项列表类似于一致散列,
     admin.rebalance(clusterName, METRIC_AGGREGATORS, 1);
 
     // Start participant

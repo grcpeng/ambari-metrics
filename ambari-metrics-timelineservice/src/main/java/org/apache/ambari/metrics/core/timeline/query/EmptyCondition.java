@@ -24,6 +24,7 @@ import org.apache.hadoop.metrics2.sink.timeline.Precision;
 
 /**
  * Encapsulate a Condition with pre-formatted and pre-parsed query string.
+ * 用预格式化和预解析的查询字符串封装条件。
  */
 public class EmptyCondition implements Condition {
   String statement;

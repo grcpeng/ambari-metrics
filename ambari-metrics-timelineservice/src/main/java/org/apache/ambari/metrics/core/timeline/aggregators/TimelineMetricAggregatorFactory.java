@@ -279,6 +279,7 @@ public class TimelineMetricAggregatorFactory {
     String aggregatorDisabledParam = CLUSTER_AGGREGATOR_SECOND_DISABLED;
 
     // Second based aggregation have added responsibility of time slicing
+    // 第二种基于聚合的方法增加了时间切片的功能
     if (TimelineMetricConfiguration.getInstance().isCollectorInMemoryAggregationEnabled()) {
       return new TimelineMetricClusterAggregatorSecondWithCacheSource(
         METRIC_AGGREGATE_SECOND,

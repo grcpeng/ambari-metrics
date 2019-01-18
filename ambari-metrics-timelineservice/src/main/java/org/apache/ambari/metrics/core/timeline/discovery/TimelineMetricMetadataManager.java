@@ -91,6 +91,7 @@ public class TimelineMetricMetadataManager {
   public static int HOSTNAME_UUID_LENGTH = 4;
 
   //Transient metric patterns. No UUID management and aggregation for such metrics.
+  // 瞬态指标模式。对于这些指标没有UUID管理和聚合
   private List<String> transientMetricPatterns = new ArrayList<>();
 
   // Single thread to sync back new writes to the store
@@ -108,6 +109,7 @@ public class TimelineMetricMetadataManager {
   public TimelineMetricMetadataManager(Configuration metricsConf, PhoenixHBaseAccessor hBaseAccessor) {
     this.metricsConf = metricsConf;
     this.hBaseAccessor = hBaseAccessor;
+    // 排除元数据列表，用逗号分隔
     String patternStrings = metricsConf.get(TIMELINE_METRIC_METADATA_FILTERS);
     if (!StringUtils.isEmpty(patternStrings)) {
       metricNameFilters.addAll(Arrays.asList(patternStrings.split(",")));
@@ -186,6 +188,8 @@ public class TimelineMetricMetadataManager {
 
     metricMetadataSync = new TimelineMetricMetadataSync(this);
     // Schedule the executor to sync to store
+
+    // 以上次任务的结束时间计算下一次任务的运行时间
     if (scheduleMetadateSync) {
       executorService.scheduleWithFixedDelay(metricMetadataSync,
         metricsConf.getInt(METRICS_METADATA_SYNC_INIT_DELAY, 120), // 2 minutes
@@ -359,6 +363,11 @@ public class TimelineMetricMetadataManager {
     return timelineMetricMetadata;
   }
 
+  /**
+   * 从ams-site.xml配置文件读取timeline.metrics.service.operation.mode的值
+   * 如果是distributed，则返回true，表示collector的模式为分布式
+   * @return
+   */
   boolean isDistributedModeEnabled() {
     String mode = metricsConf.get("timeline.metrics.service.operation.mode");
     return (mode != null) && mode.equals("distributed");
@@ -403,6 +412,8 @@ public class TimelineMetricMetadataManager {
 
   /**
    * Load the UUID mappings from the UUID table on startup.
+   * 启动时从UUID表加载UUID映射到缓存
+   * UUID分为TimelineMetricMetadata和TimelineMetricHostMetadata
    */
   private void loadUuidMapsOnInit() {
 
@@ -845,7 +856,7 @@ public class TimelineMetricMetadataManager {
    */
   public boolean isTransientMetric(String metricName, String appId) {
     //Currently we use only metric name. In the future we may use appId as well.
-
+    //目前我们只使用metricName。将来我们可能也会使用appId。
     for (String pattern : transientMetricPatterns) {
       if (metricName.matches(pattern)) {
         return true;

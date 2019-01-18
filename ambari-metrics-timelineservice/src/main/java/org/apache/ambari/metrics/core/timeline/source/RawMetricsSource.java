@@ -55,6 +55,7 @@ public class RawMetricsSource implements InternalMetricsSource {
     if (rawMetricsSink.getFlushSeconds() > internalCacheInterval) {
       // Need to cache only if external sink cannot keep up and thereby has
       // different flush interval as compared to HBase flush
+      // 只有当外部接收器无法跟上时才需要缓存，因此与HBase刷新相比具有不同的刷新间隔
       cache.putAll(metrics); // Scheduler initialized already for flush
     } else {
       submitDataWithTimeout(metrics);

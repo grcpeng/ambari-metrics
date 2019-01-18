@@ -63,8 +63,10 @@ public class AMSApplicationServer extends CompositeService {
 	 */
   @Override
   protected void serviceInit(Configuration conf) throws Exception {
+    // 单例模式
     metricConfiguration = TimelineMetricConfiguration.getInstance();
     metricConfiguration.initialize();
+    // 返回HBaseTimelineMetricsService对象实例
     timelineMetricStore = createTimelineMetricStore(conf);
     // 将HBaseTimelineMetricsService添加到serviceList中，然后初始化serviceList
     addIfService(timelineMetricStore);
@@ -107,7 +109,7 @@ public class AMSApplicationServer extends CompositeService {
         new CompositeServiceShutdownHook(amsApplicationServer),
         SHUTDOWN_HOOK_PRIORITY);
       YarnConfiguration conf = new YarnConfiguration();
-      // 初始化AMS应用服务并启动(使用的是超类AbstractService方法)
+      // 初始化AMS应用服务并启动(使用的是超类AbstractService方法),调用子类的serviceInit和serviceStart方法
       amsApplicationServer.init(conf);
       amsApplicationServer.start();
     } catch (Throwable t) {

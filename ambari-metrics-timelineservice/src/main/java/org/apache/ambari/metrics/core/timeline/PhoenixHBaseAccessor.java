@@ -265,6 +265,7 @@ public class PhoenixHBaseAccessor {
 
     if (cacheEnabled) {
       LOG.debug("Initialising and starting metrics cache committer thread...");
+      // 将缓存定时发送到hbase持久化
       metricsCommiterThread = new MetricsCacheCommitterThread(this);
       scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
       scheduledExecutorService.scheduleWithFixedDelay(metricsCommiterThread, 0, cacheCommitInterval, TimeUnit.SECONDS);
@@ -297,10 +298,20 @@ public class PhoenixHBaseAccessor {
     return insertCache.isEmpty();
   }
 
+  /**
+   * 提交缓存数据
+   */
   public void commitMetricsFromCache() {
     LOG.debug("Clearing metrics cache");
     List<TimelineMetrics> metricsList = new ArrayList<TimelineMetrics>(insertCache.size());
     if (!insertCache.isEmpty()) {
+      /**
+       * 从该队列中移除所有可用元素，并将它们添加到给定集合中。
+       * 此操作可能比重复轮询此队列更有效。
+       * 当试图向集合c中添加元素时遇到的失败可能导致在抛出关联异常时元素既不在集合中，
+       * 也不在集合中，或者同时在集合中。试图将队列耗尽给自己会导致IllegalArgumentException。
+       * 此外，如果在操作过程中修改了指定的集合，则此操作的行为是未定义的。
+       */
       insertCache.drainTo(metricsList); // More performant than poll
     }
     if (metricsList.size() > 0) {
@@ -318,7 +329,7 @@ public class PhoenixHBaseAccessor {
   }
 
 	/**
-	 * metrics存储到hbase
+	 * 将缓存数据metrics存储到hbase
 	 * @param timelineMetricsCollection
 	 */
   public void commitMetrics(Collection<TimelineMetrics> timelineMetricsCollection) {
@@ -1846,6 +1857,11 @@ public class PhoenixHBaseAccessor {
     }
   }
 
+  /**
+   * 从HOSTED_APPS_METADATA_UUID表获取数据
+   * @return
+   * @throws SQLException
+   */
   public Map<String, TimelineMetricHostMetadata> getHostedAppsMetadata() throws SQLException {
     Map<String, TimelineMetricHostMetadata> hostedAppMap = new HashMap<>();
     Connection conn = getConnection();
@@ -1893,6 +1909,11 @@ public class PhoenixHBaseAccessor {
     return hostedAppMap;
   }
 
+  /**
+   * 从INSTANCE_HOST_METADATA表获取数据
+   * @return
+   * @throws SQLException
+   */
   public Map<String, Set<String>> getInstanceHostsMetdata() throws SQLException {
     Map<String, Set<String>> instanceHostsMap = new HashMap<>();
     Connection conn = getConnection();
@@ -1951,6 +1972,7 @@ public class PhoenixHBaseAccessor {
       stmt = conn.prepareStatement(GET_METRIC_METADATA_SQL);
       rs = stmt.executeQuery();
 
+      // 从METRICS_METADATA_UUID表获取所有元数据并写入缓存metadataMap
       while (rs.next()) {
         String metricName = rs.getString("METRIC_NAME");
         String appId = rs.getString("APP_ID");
